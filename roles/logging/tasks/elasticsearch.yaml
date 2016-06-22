@@ -1,0 +1,57 @@
+#yum install fluentd rubygem-fluent-plugin-elasticsearch kibana httpd
+---
+- name: install elasticsearch
+  yum: name=elasticsearch state=installed
+
+- name: Check if system memory is greater than 64G
+  debug: msg="System memory is {{ansible_memory_mb.real.total | int}} so setting heapsize to 32G upper limit"
+  when: ansible_memory_mb.real.total|int >= 65536
+
+- name: Apply heapsize tuning for systems with greater than 64G memory
+  lineinfile: dest=/usr/share/elasticsearch/bin/elasticsearch.in.sh \
+          line="ES_HEAP_SIZE=32g" insertafter="^ES_CLASSPATH="
+  when: ansible_memory_mb.real.total|int >= 65536
+  register: elasticsearch_updated
+
+- name: Print extended documentation for heapsize tuning
+  debug: msg="Refer to https://www.elastic.co/guide/en/elasticsearch/guide/current/_limiting_memory_usage.html"
+  when: ansible_memory_mb.real.total|int >= 65536
+
+- name: Update elasticsearch startup with heap size
+  become: true
+  lineinfile: dest=/usr/share/java/elasticsearch/bin/elasticsearch.in.sh \
+          line="ES_HEAP_SIZE={{ (ansible_memory_mb.real.total / 2) | int }}m" insertafter="^ES_CLASSPATH="
+  when: ansible_memory_mb.real.total|int < 65536
+  register: elasticsearch_updated
+
+- name: enable CORS (Cross-Origin Resource Sharing)
+  lineinfile:
+    dest=/etc/elasticsearch/elasticsearch.yml
+    regexp=''
+    insertafter=EOF
+    line='{{item}}'
+  with_items:
+    - 'http.cors.enabled: true'
+    - 'http.cors.allow-origin: "/.*/"'
+  notify:
+    - restart elasticsearch
+
+- name: ensure service elasticsearch started
+  service:
+       name: elasticsearch
+       state: started
+       enabled: yes
+  ignore_errors: true
+  when: elasticsearch_updated != 0
+
+- name: configure firewalld to open elasticsearch ports
+  firewalld: zone=public port={{item}} permanent=true state=enabled immediate=true
+  with_items:
+    - 4000/tcp
+    - 9200/tcp
+
+# We need to insert data to create initial an initial index, query if it exists
+- name: Query index status
+  uri: url=http://localhost:9200/ return_content=yes
+  ignore_errors: true
+  register: elasticsearch_content

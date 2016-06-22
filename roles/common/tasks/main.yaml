@@ -1,0 +1,6 @@
+---
+- include: pre/main.yaml
+  tags: common
+
+#- include: post/main.yml
+#  when: not rcip_step_pre_only | bool

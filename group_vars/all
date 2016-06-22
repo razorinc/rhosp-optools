@@ -1,0 +1,6 @@
+proxy_env:
+  http_proxy: "{{ customer_http_proxy | default(None) }}"
+  https_proxy: "{{ customer_https_proxy | default(None) }}"
+
+no_proxy: "{{ customer_no_proxy | default('127.0.0.1,localhost,.svc.cluster.local') }}{{ customer_append_no_proxy | default(None) }}"
+update_no_proxy: "{{ customer_update_no_proxy | default(true) }}"

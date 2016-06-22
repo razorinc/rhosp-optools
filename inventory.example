@@ -1,0 +1,42 @@
+[optool]
+host0 ansible_ssh_host=192.168.122.26
+
+# Controller nodes
+[controller]
+host1 ansible_ssh_host=192.168.122.157
+host2 ansible_ssh_host=192.168.122.242
+host3 ansible_ssh_host=192.168.122.21
+
+# Compute nodes
+[compute]
+host4 ansible_ssh_host=192.168.122.9
+host5 ansible_ssh_host=192.168.122.7
+
+# Storage nodes
+[storage]
+host6 ansible_ssh_host=192.168.122.31
+host7 ansible_ssh_host=192.168.122.22
+host8 ansible_ssh_host=192.168.122.253
+
+# all nodes
+[nodes:children]
+optool
+controller
+compute
+storage
+
+# Overcloud related thing
+[overcloud:children]
+controller
+compute
+storage
+
+
+[all:vars]
+# Subscriptions. If you want to automatically register all your nodes.
+subscription_name='username'
+subscription_pass='password'
+# Either use the subscription name:
+subscription_pool='^60 Day Self-Supported Red Hat Enterprise Linux OpenStack Platform Preview$'
+# or the pool id:
+# subscription_pool_id='812812931923fff812828'

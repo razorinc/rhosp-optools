@@ -1,0 +1,29 @@
+#fluentd rubygem-fluent-plugin-elasticsearch
+---
+- name: install fluentd
+  yum: name={{item}} state=installed
+  with_items:
+    - fluentd
+    - rubygem-fluent-plugin-elasticsearch
+    - rubygem-fluent-plugin-add
+
+- name: configure fluentd
+  template:
+    src: fluentd/fluentd.conf.j2
+    dest: /etc/fluentd/fluentd.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: add the openstack services user to the fluentd group
+  user:
+    name: "{{item}}"
+    groups: fluentd
+    append: yes
+  with_items:
+    - keystone
+    - nova
+    - neutron
+    - cinder
+    - glance
+    - heat

@@ -1,0 +1,40 @@
+---
+- name: configure proxy for RH subscription-manager
+  ini_file:
+    dest: /etc/rhsm/rhsm.conf
+    section: server
+    option: "{{ item.name }}"
+    value: "{{ item.value }}"
+  with_items:
+    - { name: "proxy_hostname", value: "{{ proxy_env['http_proxy'] | replace('http://', '') | regex_replace(':.+$', '') }}" }
+    - { name: "proxy_port", value: "{{ proxy_env['http_proxy'] | regex_replace('^http:[^:]+:', '') }}" }
+  when: proxy_env['http_proxy']
+
+#- name: subscription-manager register
+#  redhat_subscription:
+#    username: "{{ subscription_name }}"
+#    password: "{{ subscription_pass }}"
+
+- name: subscription-manager attach pool (pool Name)
+  redhat_subscription:
+    state: present
+    username: "{{ subscription_name }}"
+    password: "{{ subscription_pass }}"
+    pool: "{{ subscription_pool }}"
+    autosubscribe: true
+
+  when: subscription_pool is defined
+
+- name: verify consumed pools
+  command: subscription-manager list --pool-only --consumed
+  register: pools
+  changed_when: False
+
+- name: enable repo rhel-7 and operational tools
+  shell: subscription-manager repos --enable='{{item}}'
+  with_items:
+    - rhel-7-server-rpms
+    - rhel-7-server-extras-rpms
+    - rhel-7-server-openstack-8-rpms
+    - rhel-7-server-openstack-8-optools-rpms
+    - rhel-7-server-optional-rpms

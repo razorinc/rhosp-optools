@@ -1,0 +1,19 @@
+---
+- name: upgrade all packages
+  yum: name=* state=latest
+
+- name: install common packages
+  yum:
+    name: "{{ item }}"
+    state: installed
+  with_items:
+       - nmap-ncat
+       - tcpdump
+       - vim
+       - wget
+       - httpd-tools
+       - iptables-services
+       - git
+       - screen
+       - net-tools
+       - python-httplib2

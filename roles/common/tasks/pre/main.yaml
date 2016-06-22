@@ -1,0 +1,19 @@
+---
+#- include: bashrc.yml
+- include: subscription.yaml
+  when: subscription_pool is defined or subscription_pool_id is defined
+
+- include: yum.yaml
+
+- include: package.yaml
+
+#- include: docker.yml
+#  when: inventory_hostname in groups['nodes']
+#  tags: docker
+#- include: docker-storage.yml
+#  when: common_manage_docker_storage | bool and inventory_hostname in groups['nodes']
+#  tags: docker-storage
+
+#- include: cloud_persist_hostname.yml
+#  when: cloud_init_manage
+#  tags: cloud_init

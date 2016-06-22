@@ -1,0 +1,9 @@
+---
+- include: elasticsearch.yaml
+  tags: elasticsearch
+
+- include: fluentd.yaml
+  tags: fluentd
+
+- include: kibana.yaml
+  tags: elasticsearch,kibana
